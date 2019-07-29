@@ -175,46 +175,60 @@ Component({
         })
         return
       }
-      //双手指运动 x移动后的坐标和y移动后的坐标
-      let xMove = e.touches[1].clientX - e.touches[0].clientX;
-      let yMove = e.touches[1].clientY - e.touches[0].clientY;
-      //双手指运动新的 ditance
-      let distance = Math.sqrt(xMove * xMove + yMove * yMove);
-      //计算移动的过程中实际移动了多少的距离
-      let distanceDiff = distance - this.data.distance;
-      let newScale = this.data.scale + 0.002 * distanceDiff
+      if (e.touches.length == 2){
+        //双手指运动 x移动后的坐标和y移动后的坐标
+        let xMove = e.touches[1].clientX - e.touches[0].clientX;
+        let yMove = e.touches[1].clientY - e.touches[0].clientY;
+        //双手指运动新的 ditance
+        let distance = Math.sqrt(xMove * xMove + yMove * yMove);
+        //计算移动的过程中实际移动了多少的距离
+        let distanceDiff = distance - this.data.distance;
+        let newScale = this.data.scale + 0.002 * distanceDiff
+
+        let scaleWidth = newScale * this.data.baseWidth
+        let scaleHeight = newScale * this.data.baseHeight
+        if (scaleWidth <= this.data.clientWidth) {
+          // scaleWidth = this.data.clientWidth
+          // scaleHeight = scaleWidth / this.data.baseWidth * this.data.baseHeight 
+          return
+        }
+        if (scaleWidth >= (this.data.baseWidth * 1.5)) {
+          // scaleWidth = this.data.baseWidth * 1.5
+          // sc
+          return
+        }
+        let left = this.data.imgLeft
+        let top = this.data.imgTop
+        //left = (this.data.clientWidth)/2 -  (scaleWidth)/2
+        // if (distanceDiff>=0){
+        //   left = left - 0.5 * distanceDiff
+        // }else{
+        //   left = left + 0.5 * distanceDiff
+        // }
+        let a = left - 0.5 * distanceDiff
+        if (a<=0){
+          left = a
+        }
+       
+        if (this.data.clientWidth >= (left + scaleWidth)) {
+          left = this.data.clientWidth - (left + scaleWidth) + left
+        }
+        if (this.data.clientHeight >= (top + scaleHeight)) {
+          top = this.data.clientHeight - (top + scaleHeight) + top
+          if (top > 0) top = 0
+        }
+        this.setData({
+          'distance': distance,
+          'scale': newScale,
+          'scaleWidth': scaleWidth,
+          'scaleHeight': scaleHeight,
+          'diff': distanceDiff,
+          imgLeft: left,
+          imgTop: top
+        })
+
+      }
       
-      let scaleWidth = newScale * this.data.baseWidth
-      let scaleHeight = newScale * this.data.baseHeight
-      if (scaleWidth<=this.data.clientWidth){
-        // scaleWidth = this.data.clientWidth
-        // scaleHeight = scaleWidth / this.data.baseWidth * this.data.baseHeight 
-        return
-      }
-      if (scaleWidth >= (this.data.baseWidth*1.5)){
-        // scaleWidth = this.data.baseWidth * 1.5
-        // sc
-        return
-      }
-      let left = this.data.imgLeft
-      let top = this.data.imgTop
-      left = (left + this.data.clientWidth)/2 -  (left +scaleWidth)/2
-      if (this.data.clientWidth>=(left+scaleWidth)){
-        left = this.data.clientWidth - (left + scaleWidth)+left
-      }
-      if (this.data.clientHeight>=(top+scaleHeight)){
-        top= this.data.clientHeight - (top+scaleHeight) + top
-        if (top>0) top = 0
-      }
-      this.setData({
-        'distance': distance,
-        'scale': newScale,
-        'scaleWidth': scaleWidth,
-        'scaleHeight': scaleHeight,
-        'diff': distanceDiff,
-        imgLeft: left,
-        imgTop: top
-      })
       // this.setData({
       //   imgLeft:left
       // },()=>{
