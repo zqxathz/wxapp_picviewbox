@@ -20,7 +20,7 @@ Component({
     scaleHeight: '',//图片设显示高度
     clientWidth: 0, //容器宽度
     clientHeight: 0, //容器高度
-    rotateClass: '',
+    rotateClass: 'img-normal',
     scrollleft:0,
   },
 
