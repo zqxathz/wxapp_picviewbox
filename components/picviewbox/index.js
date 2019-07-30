@@ -27,11 +27,12 @@ Component({
     imgLeft:0,
     imgTop:0,
     endTop:0,
-    rotateClass: 'img-normal',
+    rotateClass: 'img-normal',//'img-rotate',//
     scrollleft:0,
     touchs:0,
     lastTapTime:0,
-    animationData: {}
+    animationData: {},
+    landscape:1
   },
 
   lifetimes: {
@@ -56,11 +57,13 @@ Component({
               //console.log(res.gamma)
               if (res.gamma > 50) {
                 that.setData({
-                  rotateClass: "img-rotate"
+                  rotateClass: "img-rotate",
+                  landscape:1
                 })
               } else {
                 that.setData({
-                  rotateClass: "img-normal"
+                  rotateClass: "img-normal",
+                  landscape:0
                 })
               }
             })
@@ -70,12 +73,6 @@ Component({
           }
         })
       }
-      
-      // wx.createSelectorQuery().in(this).select(".images").scrollOffset(function (res) {
-      //   console.log(res)
-      //   that.data.scrollleft= res.scrollWidth / 2
-      // }).exec()
-
     }
   },
 
@@ -119,8 +116,13 @@ Component({
       // })
      
     },
+    closebox:function(e){
+      var myEventDetail = e //{} // detail对象，提供给事件监听函数
+      var myEventOption = {} // 触发事件的选项
+      this.triggerEvent('close_picbox', myEventDetail, myEventOption)
+    },
 
-    click: function (e) {
+    click: function (e) { //双击缩小图片(带动画)
       var curTime = e.timeStamp
       var lastTime = e.currentTarget.dataset.time  // 通过e.currentTarget.dataset.time 访问到绑定到该组件的自定义数据
      
@@ -128,24 +130,41 @@ Component({
         if (curTime - lastTime < 300) { //双击事件
           console.log("双击，用了：" + (curTime - lastTime))
 
-          if (this.data.baseWidth<this.data.baseHeight && this.data.clientHeight<this.data.scaleHeight){
+          let animation = wx.createAnimation({
+            duration: 500,
+            timingFunction: 'ease',
+          })
+          this.animation = animation
+
+
+          if (this.data.baseWidth<this.data.baseHeight && this.data.clientHeight<this.data.scaleHeight){ //纵向图片
             let _width = this.data.clientHeight / this.data.baseHeight * this.data.baseWidth
+
+            animation.left(0).top(0).width(_width).height(this.data.clientHeight).step()
+            animation.step({ duration: 0})
             this.setData({
-              scaleWidth:_width,
+              scaleWidth: _width,
               scaleHeight: this.data.clientHeight,
               imgLeft: 0,
               imgTop: 0,
+              animationData: animation.export(),
               scale: this.data.clientHeight / this.data.baseHeight
             })
+      
           }
 
-          if (this.data.baseWidth >= this.data.baseHeight && this.data.clientWidth < this.data.scaleWidth) {
+          if (this.data.baseWidth >= this.data.baseHeight && this.data.clientWidth < this.data.scaleWidth) { //横向图片
             let _height = this.data.clientWidth / this.data.baseWidth * this.data.baseHeight
+            let _top = this.data.clientHeight / 2 - _height / 2
+
+            animation.left(0).top(_top).width(this.data.clientWidth).height(_height).step()
+            animation.step({ duration: 0 })
             this.setData({
               scaleWidth: this.data.clientWidth,
               scaleHeight: _height,
               imgLeft: 0,
-              imgTop: this.data.clientHeight / 2 - _height / 2,
+              imgTop: _top,
+              animationData: animation.export(),
               scale: this.data.clientWidth / this.data.baseWidth
             })
           }
@@ -303,10 +322,7 @@ Component({
           {
             left = 0 
           }
-
         }
-        
-        
         this.setData({
           'distance': distance,
           'scale': newScale,

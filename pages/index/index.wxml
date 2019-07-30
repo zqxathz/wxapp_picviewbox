@@ -1,4 +1,7 @@
 <!--index.wxml-->
-<view class="container" style="width:100%;height:100%;padding:0px">
-  <picviewbox id="picviewbox" style="width:100%;height:100%" autorotate="false" maxscale="5" imgsrc="/static/pics/005.jpg"></picviewbox>
+<view wx:if="{{poppic}}" class="container" style="width:100%;height:100%;padding:0px;position:absolute;top:0px;left:0px;z-index:1000">
+  <picviewbox id="picviewbox" style="width:100%;height:100%" autorotate="false" maxscale="5" imgsrc="/static/pics/001.jpg" bindclose_picbox="closebox"></picviewbox>
+</view>
+<view style="position:absolute;bottom:10px;width:100%">
+ <button bindtap="click" type="primary" style="width:60%">显示图片</button>
 </view>

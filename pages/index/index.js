@@ -7,12 +7,24 @@ Page({
     motto: 'Hello World',
     userInfo: {},
     hasUserInfo: false,
-    canIUse: wx.canIUse('button.open-type.getUserInfo')
+    canIUse: wx.canIUse('button.open-type.getUserInfo'),
+    poppic:'',
   },
   //事件处理函数
   bindViewTap: function() {
     wx.navigateTo({
       url: '../logs/logs'
+    })
+  },
+  click: function(){
+    this.setData({
+      poppic:'1'
+    })
+  },
+  closebox:function(e){
+    console.log(e)
+    this.setData({
+      poppic: ''
     })
   },
   onLoad: function () {

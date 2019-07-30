@@ -1,5 +1,6 @@
 {
   "usingComponents": {
     "picviewbox": "/components/picviewbox/index"
-  }
+  },
+  "pageOrientation": "portrait"
 }
