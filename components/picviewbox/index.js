@@ -29,7 +29,9 @@ Component({
     endTop:0,
     rotateClass: 'img-normal',
     scrollleft:0,
-    touchs:0
+    touchs:0,
+    lastTapTime:0,
+    animationData: {}
   },
 
   lifetimes: {
@@ -117,6 +119,43 @@ Component({
       // })
      
     },
+
+    click: function (e) {
+      var curTime = e.timeStamp
+      var lastTime = e.currentTarget.dataset.time  // 通过e.currentTarget.dataset.time 访问到绑定到该组件的自定义数据
+     
+      if (curTime - lastTime > 0) {
+        if (curTime - lastTime < 300) { //双击事件
+          console.log("双击，用了：" + (curTime - lastTime))
+
+          if (this.data.baseWidth<this.data.baseHeight && this.data.clientHeight<this.data.scaleHeight){
+            let _width = this.data.clientHeight / this.data.baseHeight * this.data.baseWidth
+            this.setData({
+              scaleWidth:_width,
+              scaleHeight: this.data.clientHeight,
+              imgLeft: 0,
+              imgTop: 0,
+              scale: this.data.clientHeight / this.data.baseHeight
+            })
+          }
+
+          if (this.data.baseWidth >= this.data.baseHeight && this.data.clientWidth < this.data.scaleWidth) {
+            let _height = this.data.clientWidth / this.data.baseWidth * this.data.baseHeight
+            this.setData({
+              scaleWidth: this.data.clientWidth,
+              scaleHeight: _height,
+              imgLeft: 0,
+              imgTop: this.data.clientHeight / 2 - _height / 2,
+              scale: this.data.clientWidth / this.data.baseWidth
+            })
+          }
+
+        }
+      }
+      this.setData({
+        lastTapTime: curTime
+      })
+    },
     /**
     * 触摸开始
     */
@@ -157,22 +196,31 @@ Component({
       if (e.touches.length == 1 && this.data.touchs==1) {      
         let moveX = e.touches[0].clientX - this.data.moveX  //计算当前触摸坐标相对于前一个坐标的值
         let moveY = e.touches[0].clientY - this.data.moveY
+
+        // if (moveX >-1.1 && moveX <1.1){ //过滤触摸抖动X轴
+        //   moveX = 0
+        // }
+
+        // if (moveY > -1.1 && moveY < 1.1) { //过滤触摸抖动Y轴
+        //   moveY = 0
+        // }
+
        
-        if (this.data.clientHeight >= (this.data.scaleHeight + this.data.imgTop+moveY) && moveY<=0) { //检查右边界
+        if (this.data.clientHeight >= (this.data.scaleHeight + this.data.imgTop+moveY) && moveY<=0) { //检查下边界
           moveY = 0
         }
-        if ((this.data.imgTop + moveY) >= 0 && moveY >= 0) { //检查左边界
+        if ((this.data.imgTop + moveY) >= 0 && moveY >= 0) { //检查上边界
           moveY=0
         }
-        if ((this.data.imgLeft + moveX) >= 0 && moveX >= 0) { //检查上边界
+        if ((this.data.imgLeft + moveX) >= 0 && moveX >= 0 ) { //检查左边界
           moveX=0
         } 
-        if (this.data.clientWidth>=(this.data.scaleWidth+this.data.imgLeft+moveX) && moveX<=0){ //检查下边界
+        if (this.data.clientWidth>=(this.data.scaleWidth+this.data.imgLeft+moveX) && moveX<=0){ //检查右边界
           moveX = 0
         }
         this.setData({
           imgLeft: this.data.imgLeft+moveX,  //当前图片位置加上当前移动的偏移量
-          imgTop: this.data.imgTop + moveY,
+          imgTop: this.data.imgTop+ moveY,
           moveX: e.touches[0].clientX,  //保存当前触摸坐标
           moveY: e.touches[0].clientY
         })
@@ -182,11 +230,11 @@ Component({
         //双手指运动 x移动后的坐标和y移动后的坐标
         let xMove = e.touches[1].clientX - e.touches[0].clientX;
         let yMove = e.touches[1].clientY - e.touches[0].clientY;
-        //双手指运动新的 ditance
+        //双手指运动新的 ditance  勾股定理
         let distance = Math.sqrt(xMove * xMove + yMove * yMove);
         //计算移动的过程中实际移动了多少的距离
         let distanceDiff = distance - this.data.distance;
-        let newScale = this.data.scale + 0.002 * distanceDiff
+        let newScale = this.data.scale + 0.002 * distanceDiff * this.data.scale
 
         let scaleWidth = newScale * this.data.baseWidth
         let scaleHeight = newScale * this.data.baseHeight
@@ -205,70 +253,60 @@ Component({
         let left = this.data.imgLeft
         let top = this.data.imgTop
        
-        let target_left = left - 0.5 * distanceDiff //目标left
-        let target_top = top - 0.5 * distanceDiff // 目标top
+        let target_left = left - 0.5 * distanceDiff * this.data.scale //目标left
+        let target_top = top - 0.5 * distanceDiff * this.data.scale// 目标top
 
-        if (this.data.baseWidth >= this.data.baseHeight && target_left<=0){  //当left<0
+        if (target_left<=0){  //当left<0
           left = target_left
         }
 
-        if (this.data.baseWidth >= this.data.baseHeight && target_top<=0){
+        if (target_top<=0){
           top = target_top
         }
         
-        
-        
-        if (this.data.clientWidth >= (left + scaleWidth)) {
-          left = this.data.clientWidth - (left + scaleWidth) + left
-        }
+
 
         if (this.data.baseWidth>=this.data.baseHeight){      
-          if (this.data.clientWidth >= (left + scaleWidth)) {
-            left = this.data.clientWidth - (left + scaleWidth) + left
-          }    
-          if (this.data.clientHeight >= (top + scaleHeight)) {
+          if (this.data.clientWidth >= (left + scaleWidth) && left<0) { //缩放时固定右边界
+           left = this.data.clientWidth - (left + scaleWidth) + left  
+          }
+         
+          if (this.data.clientHeight >= (top + scaleHeight)) { //缩放时固定下边界
             top = this.data.clientHeight - (top + scaleHeight) + top
-            if (top > 0) {
+            if (top > 0) { //固定上边界
               top = 0
             }
           }
-        }else{
-          if (this.data.clientHeight >= (left + scaleHeight)) {
-            top = this.data.clientHeight - (top + scaleHeight) + top
-          }
-          if (this.data.clientWidth >= (top + scaleWidth)) {
-            left = this.data.clientWidth - (left + scaleWidth) + left
-            if (left > 0) {
-              left = 0
-            }
-          }
-        }
-        
-        if (this.data.baseWidth >= this.data.baseHeight) {        
-          if ((this.data.clientHeight >= scaleHeight && top >= 0) ){          
-            top = this.data.clientHeight / 2 - (scaleHeight + top) / 2          
-          }else{
-            if (distanceDiff>0){ //放大时
+          if ((this.data.clientHeight >= scaleHeight && top >= 0)) { //图片比容器尺寸小时,向中心收缩
+            top = this.data.clientHeight / 2 - (scaleHeight + top) / 2 
+          } else { //图片比容器大时
+            if (distanceDiff > 0) { //放大时 
               top = target_top
-            }else{            
-                if (this.data.clientHeight < scaleHeight && (this.data.clientHeight < scaleHeight + top) && (top < 0)) { //缩小时要判断边界和容器对于图片的大小
-                  top = target_top
-                }                        
-            }            
-          }
-        }else{
-          if ((this.data.clientWidth >= scaleWidth && left >= 0)) {            
-            left = 0 //;this.data.clientWidth / 2 - (scaleWidth) / 2
-          } else {           
-            if (distanceDiff > 0) { //放大时
-              left = target_left
             } else {
-              if (this.data.clientWidth < scaleWidth && (this.data.clientWidth < scaleWidth + left) && (top < left)) { //缩小时要判断边界和容器对于图片的大小
-                left = target_left
+              if (this.data.clientHeight < scaleHeight && (this.data.clientHeight < scaleHeight + top) && (top < 0)) { //缩小时要判断边界和容器对于图片的大小
+                top = target_top
               }
             }
           }
+        }else{
+          if (this.data.clientWidth >= (left + scaleWidth) && left < 0) { //缩放时固定右边界
+            left = this.data.clientWidth - (left + scaleWidth) + left
+          }
+
+          if (this.data.clientHeight >= (top + scaleHeight)) { //缩放时固定下边界
+            top = this.data.clientHeight - (top + scaleHeight) + top
+            if (top > 0) { //固定上边界
+              top = 0
+            }
+          }
+          if ((this.data.clientWidth>=scaleWidth && left>=0))
+          {
+            left = 0 
+          }
+
         }
+        
+        
         this.setData({
           'distance': distance,
           'scale': newScale,

@@ -1,7 +1,7 @@
 <!--components/picviewbox/index.wxml-->
 <view class='content' style="display:flex;align-items:center; justify-content:center">
-  <view class='images {{rotateClass}}' style="text-align:center;display:box" catchtouchmove="touchmoveCallback" 
-  catchtouchstart="touchstartCallback" catchtouchend="touchendCallback">
+  <view class='images {{rotateClass}}' style="text-align:center;display:box" data-time="{{lastTapTime}}" bindtap="click" catchtouchmove="touchmoveCallback" 
+  bindtouchstart="touchstartCallback" bindtouchend="touchendCallback" >
     <image class="" mode='aspectFill' binderror="errImg" src="{{dataimg}}"  
     style="left:{{imgLeft}}px;top:{{imgTop}}px;position:relative;width:{{scaleWidth}}px;height:{{scaleHeight}}px;" bindload="imgload" ></image>
   </view>
