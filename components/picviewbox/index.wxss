@@ -17,6 +17,7 @@
 
 .images{
   overflow:hidden;
+  background-color: rgb(230, 228, 228);
   /* transition: transform 1s; */
 }
 
@@ -25,7 +26,7 @@
   transform:rotate(0deg);
   transition: transform 0.5s;
   width:90%;
-  height:80%;
+  height:60%;
   /* transition: transform 0.5s,height 0.1s, width 0.1s,left 0.1s,top 0.1s; */
   /* ,height 0.2s, width 0.2s */
 }
