@@ -4,7 +4,7 @@ Component({
    * 组件的属性列表
    */
   properties: {
-    imgsrc:String,
+    imgsrc:Array,
     autorotate:String,
     maxscale: Number 
   },
@@ -13,6 +13,7 @@ Component({
    * 组件的初始数据
    */
   data: {
+    imgindex:0,
     dataimg: '',//图片地址
     distance: 0,//手指移动的距离
     moveX:0,
@@ -39,6 +40,9 @@ Component({
 
   lifetimes: {
     ready: function(){
+      wx.showLoading({
+        title: '正在加载中...',
+      })
       var that = this;
       wx.createSelectorQuery().in(this).select(".images").boundingClientRect( //获取容器宽高
         function (rect) {      
@@ -46,7 +50,9 @@ Component({
           that.data.clientWidth = rect.width
           that.data.clientHeight = rect.height
           that.setData({
-            dataimg: that.properties.imgsrc//'/static/pics/001.jpg',
+            dataimg: that.properties.imgsrc,//'/static/pics/001.jpg',
+            scaleHeight: rect.height,
+            scaleWidth:rect.width
           })
         }
       ).exec()
@@ -57,41 +63,45 @@ Component({
           success: (res) => {
             console.log('success')
             wx.onDeviceMotionChange((res) => {
-              console.log(res.gamma + ',' + res.beta+','+res.alpha)
-              if (res.gamma > 45 && res.beta>-5) {
+              
+              if (res.gamma > 45 && res.beta>-5 && that.data.landscape==0) {
                 that.setData({
                   rotateClass: "img-rotate",
                   content_rotate: "content-rotate",
                   landscape:1
                 },()=>{
                   wx.nextTick(()=>{
-                    wx.createSelectorQuery().in(this).select(".images").boundingClientRect( //获取容器宽高
+                    wx.createSelectorQuery().in(that).select(".images").boundingClientRect( //获取容器宽高
                       function (rect) {
-                        that.data.clientWidth = rect.width
-                        that.data.clientHeight = rect.height                        
+                        console.log('l'+rect.width + ',' + rect.height + ',' + that.data.scaleHeight + ',' + that.data.imgTop)
+                        that.data.clientWidth = rect.height
+                        that.data.clientHeight = rect.width                        
                       }
                     ).exec()
                   })
                 })
-              } else if(res.gamma < 5 && res.beta < -50) {
+              } else if (res.gamma < 5 && res.beta < -50 && that.data.landscape == 1) {
                 that.setData({
                   rotateClass: "img-normal",
                   content_rotate: "content",
                   landscape:0
                 }, () => {
-                  wx.nextTick(() => {
-                    wx.createSelectorQuery().in(this).select(".images").boundingClientRect( //获取容器宽高
+                  setTimeout(() => {
+                    wx.createSelectorQuery().in(that).select(".images").boundingClientRect( //获取容器宽高
                       function (rect) {
-                        that.data.clientWidth = rect.width
-                        that.data.clientHeight = rect.height
-                        if (rect.height > that.data.scaleHeight+that.data.imgTop){
+                        that.data.clientWidth = rect.height
+                        that.data.clientHeight = rect.width
+                        console.log(rect.width + ',' + rect.height + ',' + that.data.scaleHeight + ',' + that.data.imgTop)
+                        if (that.data.clientHeight > that.data.scaleHeight + that.data.imgTop && that.data.scaleHeight >= that.data.clientHeight){
+                         
                           that.setData({
-                            imgTop:0
+                            imgTop: that.data.imgTop + (that.data.clientHeight - (that.data.scaleHeight + that.data.imgTop)),
+                
                           })
                         }
                       }
                     ).exec()
-                  })
+                  },0)
                 })
               }
             })
@@ -112,8 +122,10 @@ Component({
     * 监听图片加载成功时触发
     */
     imgload: function (e) {
+      
       let width, height, left, top, scale = 0
-     
+      
+      console.log(e)
       if (e.detail.width <= e.detail.height) {
         width = this.data.clientWidth
         height = this.data.clientWidth / e.detail.width * e.detail.height
@@ -136,9 +148,14 @@ Component({
         'scaleHeight': height,
         'imgLeft': left,
         'imgTop': top
+      },()=>{
+        wx.hideLoading()
       })
                 
      
+    },
+    errImg:function(){
+       wx.hideLoading()
     },
     closebox:function(e){
       var myEventDetail = e //{} // detail对象，提供给事件监听函数

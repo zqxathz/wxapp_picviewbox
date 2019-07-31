@@ -4,10 +4,16 @@
  <view style="position:fixed;top:5px;width:100%;height:40rpx;text-align:center;z-index:1001;background-color:black;color:white">
   <view style="height:100%" style="font-size:26rpx">操作说明:单指移动,双指缩放,双击缩至最小,点击图片外关闭</view>
   </view>
-  <view class='images {{rotateClass}}' style="text-align:center;display:block" data-time="{{lastTapTime}}" catchtap="click" catchtouchmove="touchmoveCallback" 
+  <view class='images {{rotateClass}}' style="text-align:center;" data-time="{{lastTapTime}}" catchtap="click" catchtouchmove="touchmoveCallback" 
   bindtouchstart="touchstartCallback" bindtouchend="touchendCallback" >
-    <image class="" mode='aspectFill' binderror="errImg" src="{{dataimg}}"   animation="{{animationData}}" 
-    style="left:{{imgLeft}}px;top:{{imgTop}}px;position:relative;width:{{scaleWidth}}px;height:{{scaleHeight}}px;" bindload="imgload" ></image>
+    <block wx:for="{{dataimg}}" wx:key="index">
+      <image class="" mode='aspectFill' lazy-load="true" binderror="errImg" src="{{item.src}}"   animation="{{animationData}}" 
+      style="left:{{imgLeft}}px;top:{{imgTop}}px;position:relative;width:{{scaleWidth}}px;height:{{scaleHeight}}px;" bindload="imgload" ></image>
+    </block>
+  </view>
+  <view style="position:fixed;bottom:25rpx;" wx:if="{{dataimg.length>0}}">
+    <button bindtap="nextimg" style="display:inline-block;margin:0px 5px">上一张</button>
+    <button bindtap="nextimg" style="display:inline-block;margin:0px 5px">下一张</button>
   </view>
 </view>
 
