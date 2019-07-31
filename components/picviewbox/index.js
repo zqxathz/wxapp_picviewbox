@@ -27,19 +27,22 @@ Component({
     imgLeft:0,
     imgTop:0,
     endTop:0,
-    rotateClass: 'img-normal',//'img-rotate',//
+    rotateClass: 'img-normal',//'img-rotate',
     scrollleft:0,
     touchs:0,
     lastTapTime:0,
     animationData: {},
-    landscape:1
+    landscape:0,
+    imgdetil:{},
+    content_rotate:'content'
   },
 
   lifetimes: {
     ready: function(){
       var that = this;
       wx.createSelectorQuery().in(this).select(".images").boundingClientRect( //获取容器宽高
-        function (rect) {         
+        function (rect) {      
+         
           that.data.clientWidth = rect.width
           that.data.clientHeight = rect.height
           that.setData({
@@ -54,16 +57,41 @@ Component({
           success: (res) => {
             console.log('success')
             wx.onDeviceMotionChange((res) => {
-              //console.log(res.gamma)
-              if (res.gamma > 50) {
+              console.log(res.gamma + ',' + res.beta+','+res.alpha)
+              if (res.gamma > 45 && res.beta>-5) {
                 that.setData({
                   rotateClass: "img-rotate",
+                  content_rotate: "content-rotate",
                   landscape:1
+                },()=>{
+                  wx.nextTick(()=>{
+                    wx.createSelectorQuery().in(this).select(".images").boundingClientRect( //获取容器宽高
+                      function (rect) {
+                        that.data.clientWidth = rect.width
+                        that.data.clientHeight = rect.height                        
+                      }
+                    ).exec()
+                  })
                 })
-              } else {
+              } else if(res.gamma < 5 && res.beta < -50) {
                 that.setData({
                   rotateClass: "img-normal",
+                  content_rotate: "content",
                   landscape:0
+                }, () => {
+                  wx.nextTick(() => {
+                    wx.createSelectorQuery().in(this).select(".images").boundingClientRect( //获取容器宽高
+                      function (rect) {
+                        that.data.clientWidth = rect.width
+                        that.data.clientHeight = rect.height
+                        if (rect.height > that.data.scaleHeight+that.data.imgTop){
+                          that.setData({
+                            imgTop:0
+                          })
+                        }
+                      }
+                    ).exec()
+                  })
                 })
               }
             })
@@ -84,36 +112,32 @@ Component({
     * 监听图片加载成功时触发
     */
     imgload: function (e) {
-      
-      let width,height,left,top,scale = 0
-      if (e.detail.width<=e.detail.height){
-        width = this.data.clientWidth 
+      let width, height, left, top, scale = 0
+     
+      if (e.detail.width <= e.detail.height) {
+        width = this.data.clientWidth
         height = this.data.clientWidth / e.detail.width * e.detail.height
-        top  = 0-height/2 + this.data.clientHeight/2
-        left = 0 
-        scale = height /e.detail.height
-      }else{
+        top = 0 - height / 2 + this.data.clientHeight / 2
+        left = 0
+        scale = height / e.detail.height
+      } else {
         width = this.data.clientHeight / e.detail.height * e.detail.width
         height = this.data.clientHeight
-        left = 0 - width / 2 + this.data.clientWidth/2
+        left = 0 - width / 2 + this.data.clientWidth / 2
         top = 0
         scale = width / e.detail.width
       }
-      
+
       this.setData({
         'scale': scale,
         'baseWidth': e.detail.width, //获取图片真实宽度
         'baseHeight': e.detail.height, //获取图片真实高度
         'scaleWidth': width,// e.detail.width+'px',//'100%', //给图片设置宽度
         'scaleHeight': height,
-        'imgLeft' : left,
-        'imgTop' : top
-       
-        //'scaleHeight': '500px'//e.detail.height+'px', //'100%' //给图片设置高度
+        'imgLeft': left,
+        'imgTop': top
       })
-      // this.setData({
-      //   scrollleft: this.data.scrollleft
-      // })
+                
      
     },
     closebox:function(e){
@@ -212,9 +236,53 @@ Component({
    */
     touchmoveCallback: function (e) {
       // 单手指移动
-      if (e.touches.length == 1 && this.data.touchs==1) {      
-        let moveX = e.touches[0].clientX - this.data.moveX  //计算当前触摸坐标相对于前一个坐标的值
-        let moveY = e.touches[0].clientY - this.data.moveY
+      if (e.touches.length == 1 && this.data.touchs==1) { 
+        let moveX,moveY
+        if (this.data.landscape==0){
+          moveX = e.touches[0].clientX - this.data.moveX  //计算当前触摸坐标相对于前一个坐标的值
+          moveY = e.touches[0].clientY - this.data.moveY
+          if (this.data.clientHeight >= (this.data.scaleHeight + this.data.imgTop + moveY) && moveY <= 0) { //检查下边界
+            moveY = 0
+          }
+          if ((this.data.imgTop + moveY) >= 0 && moveY >= 0) { //检查上边界
+            moveY = 0
+          }
+          if ((this.data.imgLeft + moveX) >= 0 && moveX >= 0) { //检查左边界
+            moveX = 0
+          }
+          if (this.data.clientWidth >= (this.data.scaleWidth + this.data.imgLeft + moveX) && moveX <= 0) { //检查右边界
+            moveX = 0
+          }
+          this.setData({
+            imgLeft: this.data.imgLeft + moveX,  //当前图片位置加上当前移动的偏移量
+            imgTop: this.data.imgTop + moveY,
+            moveX: e.touches[0].clientX,  //保存当前触摸坐标
+            moveY: e.touches[0].clientY
+          })
+        }else{
+          moveX = e.touches[0].clientY - this.data.moveY  //计算当前触摸坐标相对于前一个坐标的值
+          moveY = this.data.moveX -e.touches[0].clientX
+
+          if (this.data.clientWidth >= (this.data.scaleHeight + this.data.imgTop + moveY) && moveY <= 0) { //检查下边界
+            moveY = 0
+          }
+          if ((this.data.imgTop + moveY) >= 0 && moveY >= 0) { //检查上边界
+            moveY = 0
+          }
+          if ((this.data.imgLeft + moveX) >= 0 && moveX >= 0) { //检查左边界
+            moveX = 0
+          }
+          if (this.data.clientHeight >= (this.data.scaleWidth + this.data.imgLeft + moveX) && moveX <= 0) { //检查右边界
+            moveX = 0
+          }
+          this.setData({
+            imgLeft: this.data.imgLeft + moveX,  //当前图片位置加上当前移动的偏移量
+            imgTop: this.data.imgTop + moveY,
+            moveX: e.touches[0].clientX,  //保存当前触摸坐标
+            moveY: e.touches[0].clientY
+          })
+        }
+        
 
         // if (moveX >-1.1 && moveX <1.1){ //过滤触摸抖动X轴
         //   moveX = 0
@@ -223,26 +291,8 @@ Component({
         // if (moveY > -1.1 && moveY < 1.1) { //过滤触摸抖动Y轴
         //   moveY = 0
         // }
-
-       
-        if (this.data.clientHeight >= (this.data.scaleHeight + this.data.imgTop+moveY) && moveY<=0) { //检查下边界
-          moveY = 0
-        }
-        if ((this.data.imgTop + moveY) >= 0 && moveY >= 0) { //检查上边界
-          moveY=0
-        }
-        if ((this.data.imgLeft + moveX) >= 0 && moveX >= 0 ) { //检查左边界
-          moveX=0
-        } 
-        if (this.data.clientWidth>=(this.data.scaleWidth+this.data.imgLeft+moveX) && moveX<=0){ //检查右边界
-          moveX = 0
-        }
-        this.setData({
-          imgLeft: this.data.imgLeft+moveX,  //当前图片位置加上当前移动的偏移量
-          imgTop: this.data.imgTop+ moveY,
-          moveX: e.touches[0].clientX,  //保存当前触摸坐标
-          moveY: e.touches[0].clientY
-        })
+    
+        
         return
       }
       if (e.touches.length == 2){ //双手指移动计算两个手指坐标和距离

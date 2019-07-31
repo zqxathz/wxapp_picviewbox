@@ -28,6 +28,9 @@ Page({
     })
   },
   onLoad: function () {
+    this.setData({
+      poppic: '1'
+    })
     if (app.globalData.userInfo) {
       this.setData({
         userInfo: app.globalData.userInfo,

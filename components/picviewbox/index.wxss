@@ -1,9 +1,20 @@
 /* components/picviewbox/index.wxss */
 .content {
-  height: 100%;
-  /* font-size: 0; */
-  background-color: rgba(26, 26, 26, 0.658)
- 
+  height: 100%;  
+  background-color: rgba(26, 26, 26, 0.658);
+  display:flex;
+  align-items:center; 
+  justify-content:center;
+  flex-direction:row;
+}
+
+.content-rotate {
+  height: 100%;  
+  background-color: rgba(26, 26, 26, 0.658);
+  display:flex;
+  align-items:center; 
+  justify-content:center;
+  flex-direction:column;
 }
 
 ::-webkit-scrollbar {
@@ -21,13 +32,14 @@
   overflow:hidden;
   background-color: rgb(230, 228, 228);
   box-shadow: 0px 0px 10px rgba(134, 134, 134, 0.829);
-  width:95%;
-  height:80%;
+  
   /* transition: transform 1s; */
 }
 
 
 .img-normal{
+  width:95%;
+  height:80%;
   transform:rotate(0deg);
   transition: transform 0.5s;
   
@@ -36,6 +48,8 @@
 }
 
 .img-rotate{
+  width:80vh;
+  height:90vw;
   /* width:1100px;
   height:350px; */
   transform:rotate(90deg);
