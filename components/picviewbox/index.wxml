@@ -6,14 +6,14 @@
   </view>
   <view class='images {{rotateClass}}' style="text-align:center;" data-time="{{lastTapTime}}" catchtap="click" catchtouchmove="touchmoveCallback" 
   bindtouchstart="touchstartCallback" bindtouchend="touchendCallback" >
-    <block wx:for="{{dataimg}}" wx:key="index">
-      <image class="" mode='aspectFill' lazy-load="true" binderror="errImg" src="{{item.src}}"   animation="{{animationData}}" 
-      style="left:{{imgLeft}}px;top:{{imgTop}}px;position:relative;width:{{scaleWidth}}px;height:{{scaleHeight}}px;" bindload="imgload" ></image>
-    </block>
+    <!--block wx:for="{{dataimg}}" wx:key="index" -->
+      <image class="" mode='aspectFill' lazy-load="true" binderror="errImg" src="{{dataimg[imgindex].src}}"   animation="{{animationData}}" 
+      style="left:{{imgLeft}}px;top:{{imgTop}}px;position:absolute;width:{{scaleWidth}}px;height:{{scaleHeight}}px;" bindload="imgload" ></image>
+    <!--/block-->
   </view>
-  <view style="position:fixed;bottom:25rpx;" wx:if="{{dataimg.length>0}}">
-    <button bindtap="nextimg" style="display:inline-block;margin:0px 5px">上一张</button>
-    <button bindtap="nextimg" style="display:inline-block;margin:0px 5px">下一张</button>
+  <view style="position:fixed;bottom:25rpx;" wx:if="{{dataimg.length>1}}">
+    <button wx:if="{{imgindex>0}}" catchtap="previmg" size="mini" style="display:inline-block;margin:0px 5px">上一张</button>
+    <button wx:if="{{imgindex<dataimg.length-1}}" catchtap="nextimg" size="mini" style="display:inline-block;margin:0px 5px">下一张</button>
   </view>
 </view>
 

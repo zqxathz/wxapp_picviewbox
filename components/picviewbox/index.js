@@ -180,13 +180,13 @@ Component({
 
           if (this.data.baseWidth<this.data.baseHeight && this.data.clientHeight<this.data.scaleHeight){ //纵向图片
             let _width = this.data.clientHeight / this.data.baseHeight * this.data.baseWidth
-
+            let _left = this.data.clientWidth / 2 - this.data.scaleWidth / 2
             animation.left(0).top(0).width(_width).height(this.data.clientHeight).step()
             animation.step({ duration: 0})
             this.setData({
               scaleWidth: _width,
               scaleHeight: this.data.clientHeight,
-              imgLeft: 0,
+              imgLeft: _left,
               imgTop: 0,
               animationData: animation.export(),
               scale: this.data.clientHeight / this.data.baseHeight
@@ -339,8 +339,8 @@ Component({
         let left = this.data.imgLeft
         let top = this.data.imgTop
        
-        let target_left = left - 0.5 * distanceDiff * this.data.scale //目标left
-        let target_top = top - 0.5 * distanceDiff * this.data.scale// 目标top
+        let target_left = left - (scaleWidth - this.data.scaleWidth) /2   /*  left - 0.5 * distanceDiff //* this.data.scale //目标left */
+        let target_top = top - (scaleHeight - this.data.scaleHeight) / 2 /* top - 0.5 * distanceDiff //* this.data.scale// 目标top */
 
         if (target_left<=0){  //当left<0
           left = target_left
@@ -357,8 +357,8 @@ Component({
            left = this.data.clientWidth - (left + scaleWidth) + left  
           }
          
-          if (this.data.clientHeight >= (top + scaleHeight)) { //缩放时固定下边界
-            top = this.data.clientHeight - (top + scaleHeight) + top
+          if (this.data.clientHeight >= (top + scaleHeight)) {  //如果图片下边界到达容器下边界 
+            top = this.data.clientHeight - (top + scaleHeight) + top  //缩放时固定下边界
             if (top > 0) { //固定上边界
               top = 0
             }
@@ -370,7 +370,10 @@ Component({
               top = target_top
             } else {
               if (this.data.clientHeight < scaleHeight && (this.data.clientHeight < scaleHeight + top) && (top < 0)) { //缩小时要判断边界和容器对于图片的大小
-                top = target_top
+                top = target_top               
+              }
+              if (top >= 0) { //固定上边界
+                top = 0
               }
             }
           }
@@ -387,7 +390,7 @@ Component({
           }
           if ((this.data.clientWidth>=scaleWidth && left>=0))
           {
-            left = 0 
+            left = target_left // this.data.clientWidth/2 - this.data.scaleWidth/2 
           }
         }
         this.setData({
