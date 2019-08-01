@@ -6,7 +6,9 @@ Component({
   properties: {
     imgsrc:Array,
     autorotate:String,
-    maxscale: Number 
+    maxscale: Number,
+    imgindex:Number,
+    saveimg:String
   },
 
   /**
@@ -35,25 +37,40 @@ Component({
     animationData: {},
     landscape:0,
     imgdetil:{},
-    content_rotate:'content'
+    content_rotate:'content',
+    saveimg:false
   },
 
   lifetimes: {
+    resize(res) {
+      
+      console.log(res)
+    },
     detached: function () {
       console.log('组件移除')
       wx.stopDeviceMotionListening()
     },
     ready: function(){
+      console.log(wx.env.USER_DATA_PATH)
+      wx.createSelectorQuery().in(this).selectViewport().boundingClientRect(
+        function (rect) {
+          console.log(rect)
+        }
+      ).exec() 
       wx.showLoading({
         title: '正在加载中...',
       })
       var that = this;
       wx.createSelectorQuery().in(this).select(".images").boundingClientRect( //获取容器宽高
         function (rect) {      
-         
+          let _saveimg = that.properties.saveimg == "true" ? "true" : null
+    
+          console.log(_saveimg)
           that.data.clientWidth = rect.width
           that.data.clientHeight = rect.height
           that.setData({
+            saveimg: _saveimg,
+            imgindex:that.properties.imgindex,
             dataimg: that.properties.imgsrc,//'/static/pics/001.jpg',
             scaleHeight: rect.height,
             scaleWidth:rect.width
@@ -105,19 +122,44 @@ Component({
             function (rect) {
               that.data.clientWidth = rect.width
               that.data.clientHeight = rect.height
-              console.log(rect.width + ',' + rect.height + ',' + that.data.scaleHeight + ',' + that.data.imgTop)
+              // console.log(rect.width + ',' + rect.height + ',' + that.data.scaleHeight + ',' + that.data.imgTop)
               if (that.data.clientHeight > that.data.scaleHeight + that.data.imgTop) {
                 if (that.data.clientHeight <= that.data.scaleHeight){
+                  if (that.data.imgLeft>0){
+                    that.data.imgLeft = (that.data.clientWidth - that.data.scaleWidth) / 2
+                  }
                   that.setData({
+                    imgLeft:that.data.imgLeft,
                     imgTop: that.data.imgTop + (that.data.clientHeight - (that.data.scaleHeight + that.data.imgTop)),
-
                   })
                 }else{
-                  that.setData({
-                    imgTop: (that.data.clientHeight - that.data.scaleHeight )/2,
-                  }) 
+                  if (that.data.baseHeight>that.data.baseWidth){
+                    let _height = that.data.clientHeight
+                    let _width = that.data.clientHeight / that.data.baseHeight * that.data.baseWidth
+                    let _scale = that.data.clientHeight / that.data.baseHeight
+                    that.setData({
+                      scaleWidth: _width,
+                      scaleHeight: _height,
+                      scale : _scale,
+                      imgLeft: (that.data.clientWidth - _width) / 2,
+                      imgTop: 0
+                    })
+
+                  }else{
+                    that.setData({
+                      imgTop: (that.data.clientHeight - that.data.scaleHeight) / 2,
+                      imgLeft: (that.data.clientWidth - that.data.scaleWidth) / 2
+                    }) 
+                  }
+                  
                 }
                 
+              }else{
+                if (that.data.imgLeft > 0) {
+                  that.setData({
+                    imgLeft: (that.data.clientWidth - that.data.scaleWidth) / 2
+                  })
+                }
               }
             }
           ).exec()
@@ -125,26 +167,57 @@ Component({
           setTimeout(()=>{
             wx.createSelectorQuery().in(this).select(".images").boundingClientRect( //获取容器宽高
               function (rect) {
-                console.log('l' + rect.width + ',' + rect.height + ',' + that.data.scaleHeight + ',' + that.data.imgTop+','+that.data.imgLeft)
-                //横屏需要把宽和高对换
-                that.data.clientWidth = rect.width
-                that.data.clientHeight = rect.height
-                let _width = that.data.scaleHeight
-                let _height = that.data.scaleWidth
-                if (that.data.clientWidth > that.data.scaleHeight + that.data.imgLeft){
-                  that.setData({
-                    imgLeft:  that.data.imgLeft + (that.data.clientHeight - (that.data.scaleHeight + that.data.imgLeft)),
-                  })
+                // console.log('l' + rect.width + ',' + rect.height + ',' + that.data.scaleHeight + ',' + that.data.imgTop+','+that.data.imgLeft)
+                // console.log('l' + that.data.clientHeight)
+                
+                 that.data.clientWidth = rect.height
+                  that.data.clientHeight = rect.width 
+                
+                if (that.data.clientWidth > that.data.scaleWidth + that.data.imgLeft){
+                  
+                  if (that.data.clientWidth <= that.data.scaleWidth){
+                    let _top = that.data.imgTop
+                    if (that.data.imgTop>0){
+                      _top = 0 
+                    }
+                    that.setData({
+                      imgLeft: that.data.imgLeft + (that.data.clientWidth - (that.data.scaleWidth + that.data.imgLeft)),
+                      imgTop: _top
+                    })
+                  }else{
+                    let _width = that.data.clientWidth
+                    let _height = that.data.clientWidth / that.data.baseWidth * that.data.baseHeight
+                    let _scale = that.data.clientWidth / that.data.baseWidth
+                    if (_height>that.data.clientHeight){
+                      
+                      _height = that.data.clientHeight
+                      _width = that.data.clientHeight / that.data.baseHeight * that.data.baseWidth
+                      _scale = that.data.clientHeight / that.data.baseHeight
+                    }
+                    that.setData({
+                      scale: _scale,
+                      scaleWidth: _width,
+                      scaleHeight: _height,
+                      imgTop: (that.data.clientHeight - _height) / 2,
+                      imgLeft: (that.data.clientWidth - _width) / 2
+                    }) 
+                  } 
+                }else{
+                  if (that.data.imgTop > 0) {
+                    that.setData({
+                      imgTop: 0
+                    })
+                  }
                 }
               }
             ).exec()
-          },700)
-          wx.createSelectorQuery().in(this).select(".img").boundingClientRect(
-            function(rect){
-              console.log('img' + rect.width + ',' + rect.height + ',' + that.data.scaleHeight + ',' + that.data.imgTop)
+          },0)
+          // wx.createSelectorQuery().in(this).select(".img").boundingClientRect(
+          //   function(rect){
+          //     console.log('img' + rect.width + ',' + rect.height + ',' + that.data.scaleHeight + ',' + that.data.imgTop)
 
-            }
-          ).exec()
+          //   }
+          // ).exec()
 
           
 
@@ -229,19 +302,64 @@ Component({
           }
 
           if (this.data.baseWidth >= this.data.baseHeight && this.data.clientWidth < this.data.scaleWidth) { //横向图片
-            let _height = this.data.clientWidth / this.data.baseWidth * this.data.baseHeight
-            let _top = this.data.clientHeight / 2 - _height / 2
+            
 
-            animation.left(0).top(_top).width(this.data.clientWidth).height(_height).step()
-            animation.step({ duration: 0 })
-            this.setData({
-              scaleWidth: this.data.clientWidth,
-              scaleHeight: _height,
-              imgLeft: 0,
-              imgTop: _top,
-              animationData: animation.export(),
-              scale: this.data.clientWidth / this.data.baseWidth
-            })
+            if (this.data.landscape == 0 || this.data.landscape == 1){
+              let _scale = this.data.clientWidth / this.data.baseWidth
+              let _height = this.data.clientWidth / this.data.baseWidth * this.data.baseHeight
+              let _top = this.data.clientHeight / 2 - _height / 2
+              let _width = this.data.clientWidth
+              let _left = 0
+
+              if (_height > this.data.clientHeight) {
+                console.log(_height+','+ this.data.clientHeight)
+                _scale = this.data.clientHeight / this.data.baseHeight
+                _height = this.data.clientHeight
+                _width = _height / this.data.baseHeight * this.data.baseWidth
+                _top = 0
+                _left = this.data.clientWidth / 2 - _width / 2
+              }
+
+              animation.left(_left).top(_top).width(_width).height(_height).step()
+              animation.step({ duration: 0 })
+              this.setData({
+                scaleWidth: _width,
+                scaleHeight: _height,
+                imgLeft: _left,
+                imgTop: _top,
+                animationData: animation.export(),
+                scale: _scale
+              })
+            }else{
+              
+              let _scale = this.data.clientHeight / this.data.baseWidth
+              let _height = this.data.clientHeight / this.data.baseWidth * this.data.baseHeight
+              let _width = this.data.clientHeight
+              let _top = this.data.clientWidth / 2 - _height / 2
+              let _left = 0
+
+              if (_height>this.data.clientWidth){
+                _scale = this.data.clientWidth / this.data.baseHeight
+                _height = this.data.clientWidth
+                _width = _height / this.data.baseHeight * this.data.baseWidth
+                _top = 0 
+                _left = this.data.clientHeight /2 - _width / 2
+              }
+             
+
+              animation.left(_left).top(_top).width(_width).height(_height).step()
+              animation.step({ duration: 0 })
+              this.setData({
+                scaleWidth: _width,
+                scaleHeight: _height,
+                imgLeft: _left,
+                imgTop: _top,
+                animationData: animation.export(),
+                scale: _scale
+              })
+
+            }
+            
           }
 
         }
@@ -314,7 +432,7 @@ Component({
           moveX = e.touches[0].clientY - this.data.moveY  //计算当前触摸坐标相对于前一个坐标的值
           moveY = this.data.moveX -e.touches[0].clientX
 
-          if (this.data.clientWidth >= (this.data.scaleHeight + this.data.imgTop + moveY) && moveY <= 0) { //检查下边界
+          if (this.data.clientHeight >= (this.data.scaleHeight + this.data.imgTop + moveY) && moveY <= 0) { //检查下边界
             moveY = 0
           }
           if ((this.data.imgTop + moveY) >= 0 && moveY >= 0) { //检查上边界
@@ -323,7 +441,7 @@ Component({
           if ((this.data.imgLeft + moveX) >= 0 && moveX >= 0) { //检查左边界
             moveX = 0
           }
-          if (this.data.clientHeight >= (this.data.scaleWidth + this.data.imgLeft + moveX) && moveX <= 0) { //检查右边界
+          if (this.data.clientWidth >= (this.data.scaleWidth + this.data.imgLeft + moveX) && moveX <= 0) { //检查右边界
             moveX = 0
           }
           this.setData({
@@ -358,6 +476,8 @@ Component({
 
         let scaleWidth = newScale * this.data.baseWidth
         let scaleHeight = newScale * this.data.baseHeight
+
+        
 
         if (this.data.baseWidth>=this.data.baseHeight && scaleWidth <= this.data.clientWidth) {          
           return
@@ -438,6 +558,43 @@ Component({
         })
 
       } 
+    },
+    nextimg:function(e){
+      console.log(e)
+      let _index = this.data.imgindex
+      this.setData({
+        imgindex: _index+1
+      })
+    },
+    previmg:function(e){
+      let _index = this.data.imgindex
+      this.setData({
+        imgindex: _index - 1
+      })
+    },
+    saveimg:function(e){
+      wx.downloadFile({
+        url: this.data.dataimg[this.data.imgindex].src,
+        success(res){
+          wx.saveImageToPhotosAlbum({
+            filePath: res.tempFilePath,
+            success:(res)=>{
+              console.log(res)
+            },
+            fail:(res)=>{
+              console.log(res)
+              wx.authorize({
+                scope: 'scope.writePhotosAlbum',
+                success() {
+                  // 用户已经同意小程序使用录音功能，后续调用 wx.startRecord 接口不会弹窗询问
+                  console.log('aaa')
+                }
+              })
+            }
+          })
+          
+        }
+      })
     }
   //method end
   }

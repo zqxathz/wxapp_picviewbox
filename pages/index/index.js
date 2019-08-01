@@ -18,10 +18,10 @@ Page({
         id: 1,
         src: 'http://adsite.jhlh001.com/static/test/002.jpg'//'/static/pics/001.jpg'
       },
-      // {
-      //   id: 2,
-      //   src: 'http://adsite.jhlh001.com/static/test/001.jpg'//'/static/pics/001.jpg'
-      // },
+      {
+        id: 2,
+        src: 'http://adsite.jhlh001.com/static/test/003.jpg'//'/static/pics/001.jpg'
+      },
       
     ]
   },
@@ -35,6 +35,11 @@ Page({
     this.setData({
       poppic:'1'
     })
+    // wx.previewImage({
+    //   urls:[
+    //     'http://adsite.jhlh001.com/static/test/001.jpg'
+    //   ]
+    // })
   },
   closebox:function(e){
     console.log(e)
@@ -44,7 +49,7 @@ Page({
   },
   onLoad: function () {
     this.setData({
-      poppic: '1'
+      poppic: ''
     })
     if (app.globalData.userInfo) {
       this.setData({
@@ -83,5 +88,8 @@ Page({
   },
   onShow:function(option){
    
+  },
+  onResize(res) {
+    console.log(res)
   }
 })

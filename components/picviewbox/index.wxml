@@ -14,6 +14,7 @@
   <view style="position:fixed;bottom:25rpx;" wx:if="{{dataimg.length>1}}">
     <button wx:if="{{imgindex>0}}" catchtap="previmg" size="mini" style="display:inline-block;margin:0px 5px">上一张</button>
     <button wx:if="{{imgindex<dataimg.length-1}}" catchtap="nextimg" size="mini" style="display:inline-block;margin:0px 5px">下一张</button>
+    <button wx:if="{{saveimg}}" catchtap="saveimg" size="mini" style="display:inline-block;margin:0px 5px">保存图片</button>
   </view>
 </view>
 
