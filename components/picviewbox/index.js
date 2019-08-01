@@ -39,6 +39,10 @@ Component({
   },
 
   lifetimes: {
+    detached: function () {
+      console.log('组件移除')
+      wx.stopDeviceMotionListening()
+    },
     ready: function(){
       wx.showLoading({
         title: '正在加载中...',
@@ -58,50 +62,23 @@ Component({
       ).exec()
       
       if (this.properties.autorotate.toLowerCase()=='true'){ //启动自动旋转功能
-        wx.startDeviceMotionListening({
+        wx.startDeviceMotionListening({ //启动屏幕方向监听
           interval: 'normal',
           success: (res) => {
             console.log('success')
-            wx.onDeviceMotionChange((res) => {
+            wx.onDeviceMotionChange((res) => { //监听回调
               
               if (res.gamma > 45 && res.beta>-5 && that.data.landscape==0) {
                 that.setData({
                   rotateClass: "img-rotate",
                   content_rotate: "content-rotate",
-                  landscape:1
-                },()=>{
-                  wx.nextTick(()=>{
-                    wx.createSelectorQuery().in(that).select(".images").boundingClientRect( //获取容器宽高
-                      function (rect) {
-                        console.log('l'+rect.width + ',' + rect.height + ',' + that.data.scaleHeight + ',' + that.data.imgTop)
-                        that.data.clientWidth = rect.height
-                        that.data.clientHeight = rect.width                        
-                      }
-                    ).exec()
-                  })
+                  landscape:1              
                 })
               } else if (res.gamma < 5 && res.beta < -50 && that.data.landscape == 1) {
                 that.setData({
                   rotateClass: "img-normal",
                   content_rotate: "content",
                   landscape:0
-                }, () => {
-                  setTimeout(() => {
-                    wx.createSelectorQuery().in(that).select(".images").boundingClientRect( //获取容器宽高
-                      function (rect) {
-                        that.data.clientWidth = rect.height
-                        that.data.clientHeight = rect.width
-                        console.log(rect.width + ',' + rect.height + ',' + that.data.scaleHeight + ',' + that.data.imgTop)
-                        if (that.data.clientHeight > that.data.scaleHeight + that.data.imgTop && that.data.scaleHeight >= that.data.clientHeight){
-                         
-                          that.setData({
-                            imgTop: that.data.imgTop + (that.data.clientHeight - (that.data.scaleHeight + that.data.imgTop)),
-                
-                          })
-                        }
-                      }
-                    ).exec()
-                  },0)
                 })
               }
             })
@@ -118,6 +95,63 @@ Component({
    * 组件的方法列表
    */
   methods: {
+    //动画结束监听
+    transitionend: function(e){
+      //console.log(e)
+      if (e.currentTarget.id ="_img_container"){
+        var that = this
+        if (this.data.landscape==0){ //切换到竖屏
+          wx.createSelectorQuery().in(this).select(".images").boundingClientRect( //获取容器宽高
+            function (rect) {
+              that.data.clientWidth = rect.width
+              that.data.clientHeight = rect.height
+              console.log(rect.width + ',' + rect.height + ',' + that.data.scaleHeight + ',' + that.data.imgTop)
+              if (that.data.clientHeight > that.data.scaleHeight + that.data.imgTop) {
+                if (that.data.clientHeight <= that.data.scaleHeight){
+                  that.setData({
+                    imgTop: that.data.imgTop + (that.data.clientHeight - (that.data.scaleHeight + that.data.imgTop)),
+
+                  })
+                }else{
+                  that.setData({
+                    imgTop: (that.data.clientHeight - that.data.scaleHeight )/2,
+                  }) 
+                }
+                
+              }
+            }
+          ).exec()
+        }else{ //切换到横屏
+          setTimeout(()=>{
+            wx.createSelectorQuery().in(this).select(".images").boundingClientRect( //获取容器宽高
+              function (rect) {
+                console.log('l' + rect.width + ',' + rect.height + ',' + that.data.scaleHeight + ',' + that.data.imgTop+','+that.data.imgLeft)
+                //横屏需要把宽和高对换
+                that.data.clientWidth = rect.width
+                that.data.clientHeight = rect.height
+                let _width = that.data.scaleHeight
+                let _height = that.data.scaleWidth
+                if (that.data.clientWidth > that.data.scaleHeight + that.data.imgLeft){
+                  that.setData({
+                    imgLeft:  that.data.imgLeft + (that.data.clientHeight - (that.data.scaleHeight + that.data.imgLeft)),
+                  })
+                }
+              }
+            ).exec()
+          },700)
+          wx.createSelectorQuery().in(this).select(".img").boundingClientRect(
+            function(rect){
+              console.log('img' + rect.width + ',' + rect.height + ',' + that.data.scaleHeight + ',' + that.data.imgTop)
+
+            }
+          ).exec()
+
+          
+
+        }
+
+      }
+    },
     /**
     * 监听图片加载成功时触发
     */
@@ -180,8 +214,8 @@ Component({
 
           if (this.data.baseWidth<this.data.baseHeight && this.data.clientHeight<this.data.scaleHeight){ //纵向图片
             let _width = this.data.clientHeight / this.data.baseHeight * this.data.baseWidth
-            let _left = this.data.clientWidth / 2 - this.data.scaleWidth / 2
-            animation.left(0).top(0).width(_width).height(this.data.clientHeight).step()
+            let _left = this.data.clientWidth / 2 - _width / 2
+            animation.left(_left).top(0).width(_width).height(this.data.clientHeight).step()
             animation.step({ duration: 0})
             this.setData({
               scaleWidth: _width,

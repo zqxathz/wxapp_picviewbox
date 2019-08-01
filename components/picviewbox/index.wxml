@@ -4,10 +4,10 @@
  <view style="position:fixed;top:5px;width:100%;height:40rpx;text-align:center;z-index:1001;background-color:black;color:white">
   <view style="height:100%" style="font-size:26rpx">操作说明:单指移动,双指缩放,双击缩至最小,点击图片外关闭</view>
   </view>
-  <view class='images {{rotateClass}}' style="text-align:center;" data-time="{{lastTapTime}}" catchtap="click" catchtouchmove="touchmoveCallback" 
-  bindtouchstart="touchstartCallback" bindtouchend="touchendCallback" >
+  <view id='_img_container' class='images {{rotateClass}}' style="text-align:center;" data-time="{{lastTapTime}}" catchtap="click" catchtouchmove="touchmoveCallback" 
+  bindtouchstart="touchstartCallback" bindtouchend="touchendCallback" bindtransitionend="transitionend">
     <!--block wx:for="{{dataimg}}" wx:key="index" -->
-      <image class="" mode='aspectFill' lazy-load="true" binderror="errImg" src="{{dataimg[imgindex].src}}"   animation="{{animationData}}" 
+      <image class="img" mode='aspectFill' lazy-load="true" binderror="errImg" src="{{dataimg[imgindex].src}}"   animation="{{animationData}}" 
       style="left:{{imgLeft}}px;top:{{imgTop}}px;position:absolute;width:{{scaleWidth}}px;height:{{scaleHeight}}px;" bindload="imgload" ></image>
     <!--/block-->
   </view>
