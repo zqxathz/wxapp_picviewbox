@@ -38,8 +38,10 @@ Component({
     landscape:0,
     imgdetil:{},
     content_rotate:'content',
-    saveimg:false
+    saveimg:false,
+    opensetting:null
   },
+  tempFilePath:'',
 
   lifetimes: {
     resize(res) {
@@ -52,20 +54,19 @@ Component({
     },
     ready: function(){
       console.log(wx.env.USER_DATA_PATH)
-      wx.createSelectorQuery().in(this).selectViewport().boundingClientRect(
-        function (rect) {
-          console.log(rect)
-        }
-      ).exec() 
       wx.showLoading({
         title: '正在加载中...',
       })
+      wx.createSelectorQuery().in(this).selectViewport().boundingClientRect(
+        function (rect) {
+         
+        }
+      ).exec() 
+      
       var that = this;
       wx.createSelectorQuery().in(this).select(".images").boundingClientRect( //获取容器宽高
         function (rect) {      
           let _saveimg = that.properties.saveimg == "true" ? "true" : null
-    
-          console.log(_saveimg)
           that.data.clientWidth = rect.width
           that.data.clientHeight = rect.height
           that.setData({
@@ -229,10 +230,10 @@ Component({
     * 监听图片加载成功时触发
     */
     imgload: function (e) {
-      
+      console.log(e)
       let width, height, left, top, scale = 0
       
-      console.log(e)
+     
       if (e.detail.width <= e.detail.height) {
         width = this.data.clientWidth
         height = this.data.clientWidth / e.detail.width * e.detail.height
@@ -560,40 +561,85 @@ Component({
       } 
     },
     nextimg:function(e){
-      console.log(e)
+      wx.showLoading({
+        title: '正在加载中...',
+      })
       let _index = this.data.imgindex
       this.setData({
         imgindex: _index+1
       })
     },
     previmg:function(e){
+      wx.showLoading({
+        title: '正在加载中...',
+      })
       let _index = this.data.imgindex
       this.setData({
         imgindex: _index - 1
       })
     },
     saveimg:function(e){
+      let that = this
       wx.downloadFile({
         url: this.data.dataimg[this.data.imgindex].src,
-        success(res){
+        success(res){       
+          that.tempFilePath= res.tempFilePath            
           wx.saveImageToPhotosAlbum({
             filePath: res.tempFilePath,
-            success:(res)=>{
-              console.log(res)
+            success:(res)=>{            
+              wx.showToast({
+                title: '保存到相册成功',
+              })
             },
-            fail:(res)=>{
-              console.log(res)
-              wx.authorize({
-                scope: 'scope.writePhotosAlbum',
-                success() {
-                  // 用户已经同意小程序使用录音功能，后续调用 wx.startRecord 接口不会弹窗询问
-                  console.log('aaa')
+            fail:(res)=>{                       
+              wx.getSetting({                
+                success: (res)=>{                     
+                  if (!res.authSetting["scope.writePhotosAlbum"]){                    
+                    that.setData({
+                      opensetting: "true"
+                    })
+                  }
+                  
+                },
+                fail: (res)=>{                                  
                 }
               })
             }
-          })
-          
+          })          
         }
+      })
+    },
+    opensetting:function(res){
+      console.log(res)
+      if (!res.detail.authSetting["scope.writePhotosAlbum"]) {
+        this.setData({
+          opensetting: "true"
+        })
+        wx.showModal({
+          title: '提示',
+          content: '如果不打开保存相册的权限,将无法把图片保存到相册',
+          showCancel:false
+        })
+      }else{
+        this.setData({
+          opensetting: ""
+        })  
+        wx.saveImageToPhotosAlbum({
+          filePath: this.tempFilePath,
+          success: (res) => {    
+                 
+            wx.showToast({
+              title: '保存到相册成功',
+            })
+            
+          }         
+        })
+               
+      }
+    },
+    closeopenbutton:function(e){
+      this.setData({
+        opensetting: ""
       })
     }
   //method end

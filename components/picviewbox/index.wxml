@@ -17,4 +17,8 @@
     <button wx:if="{{saveimg}}" catchtap="saveimg" size="mini" style="display:inline-block;margin:0px 5px">保存图片</button>
   </view>
 </view>
+<view wx:if="{{opensetting}}" style="position:absolute;left:calc(50vw - 150rpx);top:calc(50vh - 150rpx);text-align:center;width:300rpx;height:300rpx;display:flex;align-items:center;background-color:rgba(0,0,0,0.5);border-radius:5px">
+  <view style="width:24px;height:24px;position:absolute;right:-5px;top:-5px;border-radius:50%;background-color:red;color:white" catchtap="closeopenbutton">×</view>
+  <button open-type="openSetting" bindopensetting="opensetting" >打开设置权限</button>
+</view>
 
